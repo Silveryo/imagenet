@@ -5,6 +5,7 @@ export type LinearNode = {
 
 export type TreeNode = {
   name: string;
+  fullPath: string;
   size: number;
   hasChildren: boolean;
   children?: TreeNode[];
@@ -32,6 +33,7 @@ export function buildTreeFragment(
 
     map[item.name] = {
       name: localName,
+      fullPath: item.name,
       size: item.size,
       hasChildren: item.size > 0,
       children: [],

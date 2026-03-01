@@ -22,9 +22,10 @@ export async function loadTreeData() {
 
       map[item.name] = {
         name: parts.length === 1 ? (parts[0] ?? "") : localName,
+        fullPath: item.name,
         size: item.size,
         hasChildren: item.size > 0,
-        children: [], 
+        children: [],
       };
     }
 
@@ -56,8 +57,9 @@ export async function loadTreeData() {
 export function serializeNode(node: TreeNode, includeChildren: boolean): any {
   return {
     name: node.name,
+    fullPath: node.fullPath,
     size: node.size,
     hasChildren: node.hasChildren,
     children: includeChildren && node.children ? node.children.map(c => serializeNode({ ...c, children: [] }, false)) : []
-  }
+  };
 }

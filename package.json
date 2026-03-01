@@ -2,7 +2,7 @@
   "name": "imagenet",
   "private": true,
   "workspaces": [
-    // "frontend",
+    "frontend",
     "backend"
   ]
 }

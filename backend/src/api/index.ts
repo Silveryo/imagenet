@@ -34,7 +34,7 @@ export const apiRoutes = new Elysia({ prefix: "/api" })
     },
     {
       query: z.object({
-        parentPath: z.string().optional(),
+        parentPath: z.union([z.string(), z.array(z.string())]).optional().transform(v => Array.isArray(v) ? v.join(",") : v),
       }),
     },
   )
@@ -63,7 +63,7 @@ export const apiRoutes = new Elysia({ prefix: "/api" })
     },
     {
       query: z.object({
-        q: z.string(),
+        q: z.union([z.string(), z.array(z.string())]).transform(v => Array.isArray(v) ? v.join(",") : v),
         limit: z.coerce.number().min(1).max(100).optional().default(20),
       }),
     },
