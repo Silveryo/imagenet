@@ -374,7 +374,7 @@ function TreeItem({
           >
             <div className="flex items-start md:items-center min-h-8 py-1">
               {item.children ? (
-                <div className="flex items-start md:items-center gap-2 flex-1 group">
+                <div className="flex items-start md:items-center gap-2 flex-1 group min-w-0">
                   <Collapsible
                     open={isOpen}
                     onOpenChange={(open) => onToggleExpand(item.id, open)}
@@ -427,21 +427,21 @@ function TreeItem({
                     </div>
                   )}
                   <div className="shrink-0 mt-[2px]">{renderIcon()}</div>
-                  <span className="flex-1 break-words leading-tight py-1 pr-2 whitespace-pre-wrap">{item.name}</span>
+                  <span className="flex-1 truncate leading-tight py-1 pr-2">{item.name}</span>
                   {selectedCount !== null && selectedCount > 0 && (
                     <Badge
                       variant="secondary"
-                      className="mr-2 bg-blue-100 hover:bg-blue-100"
+                      className="mr-2 shrink-0 bg-blue-100 hover:bg-blue-100"
                     >
                       {selectedCount} selected
                     </Badge>
                   )}
                   <HoverCard>
-                    <div className="shrink-0 pt-0.5"><HoverCardTrigger asChild>
+                    <div className="shrink-0 pt-0.5 mr-4"><HoverCardTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 group-hover:opacity-100 opacity-0 items-center justify-center"
+                        className="h-6 w-6 p-0 opacity-50 hover:opacity-100 items-center justify-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Info className="h-4 w-4 text-muted-foreground" />
@@ -473,7 +473,7 @@ function TreeItem({
                   </HoverCard>
                 </div>
               ) : (
-                <div className="flex items-start md:items-center gap-2 flex-1 pl-8 group">
+                <div className="flex items-start md:items-center gap-2 flex-1 pl-8 group min-w-0">
                   {showAccessRights && (
                     <div
                       className="relative flex items-center justify-center w-4 h-4 cursor-pointer hover:opacity-80"
@@ -501,13 +501,13 @@ function TreeItem({
                     </div>
                   )}
                   <div className="shrink-0 mt-[2px]">{renderIcon()}</div>
-                  <span className="flex-1 break-words leading-tight py-1 pr-2 whitespace-pre-wrap">{item.name}</span>
+                  <span className="flex-1 truncate leading-tight py-1 pr-2">{item.name}</span>
                   <HoverCard>
-                    <div className="shrink-0 pt-0.5"><HoverCardTrigger asChild>
+                    <div className="shrink-0 pt-0.5 mr-4"><HoverCardTrigger asChild>
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0 group-hover:opacity-100 opacity-0 items-center justify-center"
+                        className="h-6 w-6 p-0 opacity-50 hover:opacity-100 items-center justify-center"
                         onClick={(e) => e.stopPropagation()}
                       >
                         <Info className="h-4 w-4 text-muted-foreground" />
