@@ -1,0 +1,8 @@
+{
+  "name": "imagenet",
+  "private": true,
+  "workspaces": [
+    // "frontend",
+    "backend"
+  ]
+}
