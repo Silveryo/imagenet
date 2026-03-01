@@ -1,66 +1,78 @@
-import { useState } from "react";
-import { useSearch, useTree } from "./hooks/queries";
+import { useState, useCallback, useEffect } from "react";
+import { useSearch, useTree, client } from "./hooks/queries";
+import TreeView from "./components/tree-view";
+import type { TreeViewItem } from "./components/tree-view";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
-function TreeNode({ node, isRoot = false }: { node: any; isRoot?: boolean }) {
-  // Roots are open by default, others closed
-  const [isOpen, setIsOpen] = useState(isRoot);
-
-  // Fetch children if we're opened and have children but haven't loaded them deeply
-  const { data, isLoading } = useTree(node.fullPath, {
-    enabled:
-      isOpen &&
-      node.hasChildren &&
-      (!node.children || node.children.length === 0),
-  });
-
-  const childrenToRender =
-    data && data.length > 0 && data[0].children
-      ? data[0].children
-      : node.children || [];
-
-  return (
-    <div style={{ marginLeft: isRoot ? 0 : "20px", marginTop: "8px" }}>
-      <div
-        onClick={() => node.hasChildren && setIsOpen(!isOpen)}
-        style={{
-          cursor: node.hasChildren ? "pointer" : "default",
-          fontWeight: node.hasChildren ? "bold" : "normal",
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-        }}
-      >
-        <span style={{ width: "16px", display: "inline-block" }}>
-          {node.hasChildren ? (isOpen ? "▼" : "▶") : "•"}
-        </span>
-        {node.name}{" "}
-        <span style={{ fontSize: "0.8em", color: "gray" }}>
-          ({node.size} items)
-        </span>
-      </div>
-
-      {isOpen && node.hasChildren && (
-        <div>
-          {isLoading && (
-            <div
-              style={{ marginLeft: "20px", color: "gray", fontSize: "0.9em" }}
-            >
-              Loading...
-            </div>
-          )}
-          {!isLoading &&
-            childrenToRender.map((child: any) => (
-              <TreeNode key={child.fullPath} node={child} />
-            ))}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function App() {
+export default function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
+
+  // Root tree nodes fetch
+  const { data: rootNodes, isLoading: isTreeLoading, error: treeError } = useTree();
+
+  const [treeData, setTreeData] = useState<TreeViewItem[]>([]);
+
+  // Initialize tree
+  useEffect(() => {
+    if (rootNodes) {
+      const convert = (nodes: any[]): TreeViewItem[] => {
+        return nodes.map((node) => ({
+          id: node.fullPath,
+          name: `${node.name} (${node.size.toLocaleString()} items)`,
+          type: node.hasChildren ? "folder" : "file",
+          children: node.hasChildren ? [] : undefined,
+        }));
+      };
+      setTreeData(convert(rootNodes));
+    }
+  }, [rootNodes]);
+
+  const updateNodeChildren = (nodes: TreeViewItem[], id: string, newChildren: TreeViewItem[]): TreeViewItem[] => {
+    return nodes.map((node) => {
+      if (node.id === id) {
+        return { ...node, children: newChildren };
+      }
+      if (node.children) {
+        return { ...node, children: updateNodeChildren(node.children, id, newChildren) };
+      }
+      return node;
+    });
+  };
+
+  const handleToggleExpand = useCallback(async (id: string, isOpen: boolean) => {
+    if (isOpen) {
+      // Find the node
+      const findNode = (nodes: TreeViewItem[], targetId: string): TreeViewItem | null => {
+        for (const n of nodes) {
+          if (n.id === targetId) return n;
+          if (n.children) {
+            const found = findNode(n.children, targetId);
+            if (found) return found;
+          }
+        }
+        return null;
+      };
+
+      const node = findNode(treeData, id);
+      // Only fetch if folder has children but array is empty
+      if (node && node.children && node.children.length === 0) {
+        const result = await client.api.tree.get({ query: { parentPath: id } });
+        if (result.data && result.data[0]) {
+          const childrenData = result.data[0].children || [];
+          const newChildren = childrenData.map((child: any) => ({
+            id: child.fullPath,
+            name: `${child.name} (${child.size.toLocaleString()} items)`,
+            type: child.hasChildren ? "folder" : "file",
+            children: child.hasChildren ? [] : undefined,
+          }));
+          setTreeData((prev) => updateNodeChildren(prev, id, newChildren));
+        }
+      }
+    }
+  }, [treeData]);
 
   const {
     data: searchResults,
@@ -68,83 +80,99 @@ function App() {
     error: searchError,
   } = useSearch({ q: debouncedQuery, limit: 10 });
 
-  const {
-    data: rootNodes,
-    isLoading: isTreeLoading,
-    error: treeError,
-  } = useTree();
-
   return (
-    <div style={{ padding: "20px", fontFamily: "sans-serif" }}>
-      <h1>ImageNet Taxonomy</h1>
+    <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
+      <div className="max-w-7xl mx-auto space-y-6 md:space-y-8">
+        <header>
+          <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-slate-900">ImageNet Taxonomy</h1>
+          <p className="text-slate-500 mt-2 text-sm md:text-base">Explore the ImageNet hierarchical structure.</p>
+        </header>
 
-      <section>
-        <h2>Search</h2>
-        <div style={{ display: "flex", gap: "8px", marginBottom: "16px" }}>
-          <input
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Type to search..."
-            style={{
-              padding: "8px",
-              borderRadius: "4px",
-              border: "1px solid #ccc",
-            }}
-          />
-          <button
-            onClick={() => setDebouncedQuery(searchQuery)}
-            style={{ padding: "8px 16px", cursor: "pointer" }}
-          >
-            Search
-          </button>
-        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 items-start">
+          <div className="lg:col-span-1 space-y-6">
+            <section className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+              <h2 className="text-lg md:text-xl font-semibold mb-4 text-slate-800">Search</h2>
+              <div className="flex flex-col gap-3 mb-4">
+                <Input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Query taxonomy..."
+                  className="w-full bg-slate-50/50"
+                  onKeyDown={(e) => {
+                     if (e.key === "Enter") {
+                        setDebouncedQuery(searchQuery);
+                     }
+                  }}
+                />
+                <Button 
+                  onClick={() => setDebouncedQuery(searchQuery)}
+                  className="w-full"
+                >
+                  Search
+                </Button>
+              </div>
 
-        {isSearchLoading && debouncedQuery && <p>Loading search results...</p>}
-        {searchError && (
-          <p style={{ color: "red" }}>Error: {searchError.message}</p>
-        )}
+              {isSearchLoading && debouncedQuery && (
+                <div className="text-sm text-slate-500 animate-pulse">Searching...</div>
+              )}
+              {searchError && (
+                <div className="text-sm text-red-500 bg-red-50 p-3 rounded-lg border border-red-100">
+                  {searchError.message}
+                </div>
+              )}
 
-        {searchResults && (
-          <ul>
-            {searchResults.length === 0 ? (
-              <li>No results found for "{debouncedQuery}"</li>
-            ) : (
-              searchResults.map((result: any, i: number) => (
-                <li key={i}>
-                  <pre>{JSON.stringify(result, null, 2)}</pre>
-                </li>
-              ))
-            )}
-          </ul>
-        )}
-      </section>
-
-      <hr style={{ margin: "32px 0" }} />
-
-      <section>
-        <h2>Taxonomy Tree</h2>
-        {isTreeLoading && <p>Loading tree data...</p>}
-        {treeError && (
-          <p style={{ color: "red" }}>Error: {treeError.message}</p>
-        )}
-
-        {rootNodes && (
-          <div
-            style={{
-              background: "#f5f5f5",
-              padding: "16px",
-              borderRadius: "4px",
-            }}
-          >
-            {rootNodes.map((node: any) => (
-              <TreeNode key={node.fullPath} node={node} isRoot={true} />
-            ))}
+              {searchResults && (
+                <div className="space-y-3 mt-6">
+                  {searchResults.length === 0 ? (
+                    <div className="text-sm text-slate-500 text-center py-4 bg-slate-50 rounded-lg">
+                      No results found for "{debouncedQuery}"
+                    </div>
+                  ) : (
+                    searchResults.map((result: any, i: number) => (
+                      <div key={i} className="p-4 bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100 rounded-xl text-sm">
+                        <div className="font-semibold text-slate-900">{result.name}</div>
+                        <div className="text-xs text-slate-500 truncate mt-1" title={result.fullPath}>{result.fullPath}</div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <Badge variant="secondary" className="bg-slate-200/50 text-slate-600 hover:bg-slate-200/50 rounded-md">
+                            {result.size.toLocaleString()} items
+                          </Badge>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </section>
           </div>
-        )}
-      </section>
+
+          <div className="lg:col-span-3">
+            <section className="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-slate-200/60 transition-all hover:shadow-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg md:text-xl font-semibold text-slate-800">Taxonomy Tree</h2>
+                {isTreeLoading && (
+                  <Badge variant="outline" className="animate-pulse">Loading...</Badge>
+                )}
+              </div>
+              
+              {treeError && (
+                <div className="text-sm text-red-500 bg-red-50 p-4 rounded-xl border border-red-100 mb-4">
+                  {treeError.message}
+                </div>
+              )}
+
+              {!isTreeLoading && treeData.length > 0 && (
+                <div className="w-full">
+                  <TreeView 
+                    data={treeData} 
+                    onToggleExpand={handleToggleExpand}
+                  />
+                </div>
+              )}
+            </section>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
-
-export default App;
