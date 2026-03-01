@@ -34,6 +34,7 @@
         "@radix-ui/react-collapsible": "^1.1.12",
         "@radix-ui/react-context-menu": "^2.2.16",
         "@radix-ui/react-hover-card": "^1.1.15",
+        "@t3-oss/env-core": "^0.13.10",
         "@tailwindcss/vite": "^4.2.1",
         "@tanstack/react-query": "^5.90.21",
         "@tanstack/react-virtual": "^3.13.19",
@@ -46,6 +47,7 @@
         "react-dom": "^19.2.0",
         "tailwind-merge": "^3.5.0",
         "tailwindcss": "^4.2.1",
+        "zod": "^4.3.6",
       },
       "devDependencies": {
         "@types/node": "^25.3.3",

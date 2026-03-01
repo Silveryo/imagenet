@@ -3,7 +3,9 @@ import { treaty } from "@elysiajs/eden";
 import type { App } from "../../../backend/src/index";
 
 //TODO 
-export const client = treaty<App>("http://localhost:3000");
+import { env } from "../env";
+
+export const client = treaty<App>(env.VITE_API_URL);
 
 export const queryKeys = {
   search: (q: string, limit?: number) => ["search", q, limit] as const,
