@@ -2,6 +2,7 @@ import { useQuery, type UseQueryOptions } from "@tanstack/react-query";
 import { treaty } from "@elysiajs/eden";
 import type { App } from "../../../backend/src/index";
 
+//TODO 
 export const client = treaty<App>("http://localhost:3000");
 
 export const queryKeys = {
