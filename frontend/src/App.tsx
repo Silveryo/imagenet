@@ -78,7 +78,7 @@ export default function App() {
     data: searchResults,
     isLoading: isSearchLoading,
     error: searchError,
-  } = useSearch({ q: debouncedQuery, limit: 10 });
+  } = useSearch({ q: debouncedQuery, limit: 4 });
 
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8 font-sans text-slate-900">
@@ -129,17 +129,33 @@ export default function App() {
                       No results found for "{debouncedQuery}"
                     </div>
                   ) : (
-                    searchResults.map((result: any, i: number) => (
-                      <div key={i} className="p-4 bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100 rounded-xl text-sm">
-                        <div className="font-semibold text-slate-900">{result.name}</div>
-                        <div className="text-xs text-slate-500 truncate mt-1" title={result.fullPath}>{result.fullPath}</div>
-                        <div className="mt-3 flex items-center justify-between">
-                          <Badge variant="secondary" className="bg-slate-200/50 text-slate-600 hover:bg-slate-200/50 rounded-md">
-                            {result.size.toLocaleString()} items
-                          </Badge>
+                    searchResults.map((result: any, i: number) => {
+                      const pathParts = result.fullPath ? result.fullPath.split(' > ') : [];
+                      
+                      return (
+                        <div key={i} className="p-4 bg-slate-50 hover:bg-slate-100/80 transition-colors border border-slate-100 rounded-xl text-sm flex flex-col gap-2">
+                          <div className="flex justify-between items-start gap-3">
+                            <div className="font-semibold text-slate-900 leading-tight">
+                              {result.localName || result.name || "Unknown"}
+                            </div>
+                            <Badge variant="secondary" className="shrink-0 bg-slate-200/50 text-slate-700 hover:bg-slate-200/50 rounded-md">
+                              {result.size.toLocaleString()} items
+                            </Badge>
+                          </div>
+                          
+                          <div className="text-xs text-slate-500 break-words leading-relaxed" title={result.fullPath}>
+                            {pathParts.map((part: string, idx: number) => (
+                              <span key={idx}>
+                                <span className="hover:text-slate-800 transition-colors">{part}</span>
+                                {idx < pathParts.length - 1 && (
+                                  <span className="mx-1.5 text-slate-300 select-none">&gt;</span>
+                                )}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                      </div>
-                    ))
+                      );
+                    })
                   )}
                 </div>
               )}
