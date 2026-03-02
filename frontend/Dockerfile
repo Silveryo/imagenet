@@ -8,7 +8,7 @@ RUN bun install
 
 # Switch to frontend
 WORKDIR /app/frontend
-COPY frontend/package.json frontend/bun.lockb* ./
+COPY frontend/package.json frontend/bun.lock* ./
 RUN bun install
 
 COPY frontend ./

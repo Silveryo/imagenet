@@ -71,8 +71,13 @@ console.log(
 );
 
 async function ingest() {
-  // Clear the table first
-  await db.execute(sql`TRUNCATE TABLE nodes RESTART IDENTITY`);
+  const countResult = await db.execute(sql`SELECT count(*) FROM nodes`);
+  const count = Number(countResult[0]?.count || 0);
+
+  if (count > 0) {
+    console.log("Database already populated. Skipping ingestion.");
+    process.exit(0);
+  }
 
   const BATCH_SIZE = 5000;
   let inserted = 0;

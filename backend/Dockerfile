@@ -1,10 +1,13 @@
 FROM oven/bun:1
 WORKDIR /app
 
-COPY package.json bun.lock* ./
+COPY backend/package.json backend/bun.lock* ./
 RUN bun install
 
-COPY . .
+COPY backend/ .
+# Also copy the data folder so that the ingested XML file is packed within the image.
+COPY data/ /data/
+
 RUN bun run build
 
 EXPOSE 3000
