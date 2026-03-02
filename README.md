@@ -2,6 +2,10 @@
 
 A blazing-fast, strictly-typed full-stack taxonomy explorer for the ImageNet dataset. Transfers massive hierarchical XML data into a sleek, searchable, and lazy-loaded UI.
 
+UI is deployed on Railway: https://fe-production-cd55.up.railway.app/
+
+For about 2 more weeks since this commit.
+
 ## 🚀 Running Locally
 
 The entire stack is containerized for zero-friction setup.
@@ -24,11 +28,11 @@ docker-compose up -d --build
 
 - **End-to-End Type Safety:** TypeScript throughout, powered by Bun, Elysia, Drizzle ORM, and React.
 - **Lazy-Loaded Tree Exploration:** The backend reconstructs precise tree fragments on the fly, preventing massive network payloads and ensuring rapid frontend rendering.
-- **FE Tree View:** Collapsible tree components with search functionality, built with React and some tanstack packages.
+- **FE Tree View:** Collapsible tree components with search functionality, built with React and some tanstack packages. After adding some styling it became laggy... too many nodes! I added virtualization.
 
 ## 🛠️ Some TODOs
 
 - In general better project config (tsconfig, lint+format like Oxc ...)
 - Maybe tests but since I didn't do TDD, there's no point because nobody will be extending this codebase.
 - Better UI/UX. It works on desktop and mobile, but I didn't really think about what an "user" would like to do in this app, so it's pretty barebones. I just wanted to see the taxonomy tree and search it, which is what it does.
-- I might deploy this to Railway.
+  
